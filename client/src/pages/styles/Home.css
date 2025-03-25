@@ -1,63 +1,105 @@
-/* body{
-    background: red;
-} */
-.backaground_image{
-    background: url("../../assets/images/bg_jmg1.jpg") no-repeat;
+/* body{     background: red; } */ 
+
+.backaground_image{     
+    background: url("https://images.unsplash.com/photo-1500382017468-9049fed747ef?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1932&q=80") no-repeat;     
     background-size: cover;
-    /* background-position: 0px 0px; */
-    filter: brightness(0.7);
-    height: 340px;
-}
-.top-part{
-    position: absolute;
-    height: 340px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
+    background-position: center center;     
+    filter: brightness(0.7);     
+    height: 340px; 
+} 
+
+.top-part{     
+    position: absolute;     
+    height: 340px;     
+    display: flex;     
+    justify-content: center;     
+    align-items: center; 
+}  
+
+.offers_img{     
+    background: url("https://images.unsplash.com/photo-1500076656116-558758c991c1?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1471&q=80") no-repeat;     
+    background-size: cover;
+    background-position: center center;     
+    width: 100%;     
+    height: 250px;     
+    filter: hue-rotate(188deg) brightness(0.8); 
+}  
+
+@media only screen and (min-width:550px) {     
+    .backaground_image{         
+        background-position: center center;         
+        background-size: cover;
+        height: 400px;     
+    }
+    .top-part {
+        height: 400px;
+    }     
+    .offers_img{         
+        background-position: center center;         
+        background-size: cover;     
+    } 
+} 
+
+@media only screen and (min-width:800px) {     
+    .backaground_image{         
+        background-position: center center;         
+        background-size: cover;
+        height: 450px;     
+    }
+    .top-part {
+        height: 450px;
+    }     
+    .offers_img{         
+        background-position: center center;         
+        background-size: cover;
+        height: 300px;     
+    } 
+} 
+
+@media only screen and (min-width:950px) {     
+    .backaground_image{         
+        background-position: center center;         
+        background-size: cover;
+        height: 500px;     
+    }
+    .top-part {
+        height: 500px;
+    }
+    .offers_img{         
+        background-position: center center;         
+        background-size: cover;
+        height: 350px;     
+    } 
+} 
+
+@media only screen and (min-width:1080px) {     
+    .backaground_image{         
+        background-position: center center;         
+        background-size: cover;
+        height: 550px;     
+    }
+    .top-part {
+        height: 550px;
+    }     
+    .offers_img{         
+        background-position: center center;         
+        background-size: cover;
+        height: 400px;     
+    } 
 }
 
-.offers_img{
-    background: url("../../assets/images/best_offers.jpg") no-repeat;
-    background-size: cover;
-    /* background-position: 0px -160px; */
-    width: 100%;
-    height: 250px;
-    filter: hue-rotate(188deg) brightness(0.8);
-}
-
-@media only screen and (min-width:550px) {
-    .backaground_image{
-        /* background-position: 0px -120px; */
+@media only screen and (min-width:1400px) {     
+    .backaground_image{         
+        background-position: center center;         
         background-size: cover;
+        height: 650px;     
     }
-    .offers_img{
-        background-position: 0px -70px;
+    .top-part {
+        height: 650px;
+    }     
+    .offers_img{         
+        background-position: center center;         
         background-size: cover;
-    }
-}
-@media only screen and (min-width:800px) {
-    .backaground_image{
-        /* background-position: 0px -220px; */
-        background-size: cover;
-    }
-    .offers_img{
-        background-position: 0px -140px;
-        background-size: cover;
-    }
-}
-@media only screen and (min-width:950px) {
-    .offers_img{
-        background-position: 0px -170px;
-        background-size: cover;
-    }
-}
-@media only screen and (min-width:1080px) {
-    .backaground_image{
-        /* background-position: 0px -320px; */
-        background-size: cover;
-    }
-    .offers_img{
-        background-position: 0px -220px;
-        background-size: cover;
-    }
+        height: 450px;     
+    } 
 }

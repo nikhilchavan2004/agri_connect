@@ -451,7 +451,7 @@ const Package = () => {
                   }}
                   className="p-2 rounded text-white bg-green-700"
                 >
-                  Rate Package
+                  Rate Product
                 </button>
               )}
             </div>

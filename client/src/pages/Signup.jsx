@@ -22,6 +22,7 @@ const Signup = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    console.log(formData)
     try {
       const res = await axios.post(`/api/auth/signup`, formData);
       if (res?.data?.success) {
@@ -42,72 +43,88 @@ const Signup = () => {
         width: "100%",
         height: "90vh",
         background:
-          "linear-gradient(0deg, rgba(2,0,36,1) 0%, rgba(9,9,121,1) 35%, rgba(0,212,255,1) 100%)",
+          "linear-gradient(0deg, rgba(6,95,15,1) 0%, rgba(56,142,60,1) 50%, rgba(129,199,132,1) 100%)",
+        backgroundImage: "url('https://images.unsplash.com/photo-1500382017468-9049fed747ef?ixlib=rb-1.2.1&auto=format&fit=crop&w=1950&q=80')",
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+        backgroundBlendMode: "overlay",
       }}
     >
       <form onSubmit={handleSubmit}>
-        <div className="flex flex-col border border-black rounded-lg p-2 w-72 h-fit gap-2 sm:w-[320px] bg-white bg-opacity-60">
-          <h1 className="text-3xl text-center font-semibold">Signup</h1>
+        <div className="flex flex-col border-2 border-green-700 rounded-lg p-4 w-72 h-fit gap-3 sm:w-[350px] bg-white bg-opacity-90 shadow-lg">
+          <h1 className="text-3xl text-center font-semibold text-green-800">AGRI CONNECT</h1>
+          <p className="text-center text-green-700 font-medium -mt-2 mb-1">Join our farming community</p>
+          
           <div className="flex flex-col">
-            <label htmlFor="username" className="font-semibold">
+            <label htmlFor="username" className="font-semibold text-green-900">
               Username:
             </label>
             <input
               type="text"
               id="username"
-              className="p-1 rounded border border-black bg-white bg-opacity-80"
+              placeholder="Your username"
+              className="p-2 rounded-md border border-green-300 bg-white bg-opacity-80 focus:outline-none focus:ring-1 focus:ring-green-500"
               onChange={handleChange}
             />
           </div>
+          
           <div className="flex flex-col">
-            <label htmlFor="email" className="font-semibold">
+            <label htmlFor="email" className="font-semibold text-green-900">
               Email:
             </label>
             <input
               type="email"
               id="email"
-              className="p-1 rounded border border-black bg-white bg-opacity-80"
+              placeholder="your@email.com"
+              className="p-2 rounded-md border border-green-300 bg-white bg-opacity-80 focus:outline-none focus:ring-1 focus:ring-green-500"
               onChange={handleChange}
             />
           </div>
+          
           <div className="flex flex-col">
-            <label htmlFor="password" className="font-semibold">
+            <label htmlFor="password" className="font-semibold text-green-900">
               Password:
             </label>
             <input
               type="password"
               id="password"
-              className="p-1 rounded border border-black bg-white bg-opacity-80"
+              placeholder="••••••••"
+              className="p-2 rounded-md border border-green-300 bg-white bg-opacity-80 focus:outline-none focus:ring-1 focus:ring-green-500"
               onChange={handleChange}
             />
           </div>
+          
           <div className="flex flex-col">
-            <label htmlFor="address" className="font-semibold">
+            <label htmlFor="address" className="font-semibold text-green-900">
               Address:
             </label>
             <textarea
               maxLength={200}
-              type="text"
               id="address"
-              className="p-1 rounded border border-black resize-none bg-white bg-opacity-80"
+              placeholder="Your farm address"
+              className="p-2 rounded-md border border-green-300 resize-none bg-white bg-opacity-80 focus:outline-none focus:ring-1 focus:ring-green-500"
               onChange={handleChange}
             />
           </div>
+          
           <div className="flex flex-col">
-            <label htmlFor="phone" className="font-semibold">
+            <label htmlFor="phone" className="font-semibold text-green-900">
               Phone:
             </label>
             <input
               type="text"
               id="phone"
-              className="p-1 rounded border border-black bg-white bg-opacity-80"
+              placeholder="Your contact number"
+              className="p-2 rounded-md border border-green-300 bg-white bg-opacity-80 focus:outline-none focus:ring-1 focus:ring-green-500"
               onChange={handleChange}
             />
           </div>
-          <p className="text-blue-700 text-sm hover:underline">
+          
+          <p className="text-green-700 text-sm hover:underline">
             <Link to={`/login`}>Have an account? Login</Link>
           </p>
-          <button className="p-3 text-white bg-slate-700 rounded hover:opacity-95">
+          
+          <button className="p-3 text-white bg-green-700 rounded-md hover:bg-green-800 transition duration-300 font-medium shadow-md">
             Signup
           </button>
         </div>

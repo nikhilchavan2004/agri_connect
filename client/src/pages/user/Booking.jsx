@@ -1,68 +1,61 @@
 import React, { useEffect, useState } from "react";
-import { FaClock, FaMapMarkerAlt } from "react-icons/fa";
+import { FaCalendarAlt, FaMapMarkerAlt, FaTractor } from "react-icons/fa";
 import { useSelector } from "react-redux";
 import { useNavigate, useParams } from "react-router";
 import DropIn from "braintree-web-drop-in-react";
 import axios from "axios";
+import { Rating } from "@mui/material";
 
-const Booking = () => {
+const EquipmentBooking = () => {
   const { currentUser } = useSelector((state) => state.user);
   const params = useParams();
   const navigate = useNavigate();
-  const [packageData, setPackageData] = useState({
-    packageName: "",
-    packageDescription: "",
-    packageDestination: "",
-    packageDays: 1,
-    packageNights: 1,
-    packageAccommodation: "",
-    packageTransportation: "",
-    packageMeals: "",
-    packageActivities: "",
-    packagePrice: 500,
-    packageDiscountPrice: 0,
-    packageOffer: false,
-    packageRating: 0,
-    packageTotalRatings: 0,
-    packageImages: [],
+  const [equipmentData, setEquipmentData] = useState({
+    name: "",
+    description: "",
+    category: "",
+    dailyRate: 0,
+    weeklyRate: 0,
+    monthlyRate: 0,
+    rating: 0,
+    totalRatings: 0,
+    images: [],
+    location: ""
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
   const [bookingData, setBookingData] = useState({
     totalPrice: 0,
-    packageDetails: null,
-    buyer: null,
-    persons: 1,
-    date: null,
+    equipmentId: null,
+    renter: null,
+    duration: 1,
+    durationType: "daily",
+    startDate: null,
+    endDate: null
   });
   const [clientToken, setClientToken] = useState("");
   const [instance, setInstance] = useState("");
   const [currentDate, setCurrentDate] = useState("");
 
-  const getPackageData = async () => {
+  const getEquipmentData = async () => {
     try {
       setLoading(true);
       const res = await fetch(
-        `/api/package/get-package-data/${params?.packageId}`
+        `/api/equipment/get-equipment/${params?.equipmentId}`
       );
       const data = await res.json();
       if (data?.success) {
-        setPackageData({
-          packageName: data?.packageData?.packageName,
-          packageDescription: data?.packageData?.packageDescription,
-          packageDestination: data?.packageData?.packageDestination,
-          packageDays: data?.packageData?.packageDays,
-          packageNights: data?.packageData?.packageNights,
-          packageAccommodation: data?.packageData?.packageAccommodation,
-          packageTransportation: data?.packageData?.packageTransportation,
-          packageMeals: data?.packageData?.packageMeals,
-          packageActivities: data?.packageData?.packageActivities,
-          packagePrice: data?.packageData?.packagePrice,
-          packageDiscountPrice: data?.packageData?.packageDiscountPrice,
-          packageOffer: data?.packageData?.packageOffer,
-          packageRating: data?.packageData?.packageRating,
-          packageTotalRatings: data?.packageData?.packageTotalRatings,
-          packageImages: data?.packageData?.packageImages,
+        setEquipmentData({
+          name: data?.equipment?.name,
+          description: data?.equipment?.description,
+          category: data?.equipment?.category,
+          dailyRate: data?.equipment?.dailyRate,
+          weeklyRate: data?.equipment?.weeklyRate,
+          monthlyRate: data?.equipment?.monthlyRate,
+          rating: data?.equipment?.rating,
+          totalRatings: data?.equipment?.totalRatings,
+          images: data?.equipment?.images,
+          location: data?.equipment?.location
         });
         setLoading(false);
       } else {
@@ -74,34 +67,36 @@ const Booking = () => {
     }
   };
 
-  //get paymentgateway token
+  // Get payment gateway token
   const getToken = async () => {
     try {
-      const { data } = await axios.get(`/api/package/braintree/token`);
+      const { data } = await axios.get(`/api/equipment/braintree/token`);
       setClientToken(data?.clientToken);
     } catch (error) {
       console.log(error);
     }
   };
+
   useEffect(() => {
     getToken();
   }, [currentUser]);
 
-  //handle payment & book package
-  const handleBookPackage = async () => {
+  // Handle payment & book equipment
+  const handleRentEquipment = async () => {
     if (
-      bookingData.packageDetails === "" ||
-      bookingData.buyer === "" ||
+      !bookingData.equipmentId ||
+      !bookingData.renter ||
       bookingData.totalPrice <= 0 ||
-      bookingData.persons <= 0 ||
-      bookingData.date === ""
+      bookingData.duration <= 0 ||
+      !bookingData.startDate ||
+      !bookingData.endDate
     ) {
       alert("All fields are required!");
       return;
     }
     try {
       setLoading(true);
-      const res = await fetch(`/api/booking/book-package/${params?.id}`, {
+      const res = await fetch(`/api/booking/rent-equipment`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -124,247 +119,269 @@ const Booking = () => {
   };
 
   useEffect(() => {
-    if (params?.packageId) {
-      getPackageData();
+    if (params?.equipmentId) {
+      getEquipmentData();
     }
     let date = new Date().toISOString().substring(0, 10);
-    let d = date.substring(0, 8) + (parseInt(date.substring(8)) + 1);
-    setCurrentDate(d);
-  }, [params?.packageId]);
+    setCurrentDate(date);
+  }, [params?.equipmentId]);
 
   useEffect(() => {
-    if (packageData && params?.packageId) {
+    if (equipmentData && params?.equipmentId) {
       setBookingData({
         ...bookingData,
-        packageDetails: params?.packageId,
-        buyer: currentUser?._id,
-        totalPrice: packageData?.packageDiscountPrice
-          ? packageData?.packageDiscountPrice * bookingData?.persons
-          : packageData?.packagePrice * bookingData?.persons,
+        equipmentId: params?.equipmentId,
+        renter: currentUser?._id,
+        totalPrice: calculateTotalPrice()
       });
     }
-  }, [packageData, params]);
+  }, [equipmentData, params, bookingData.duration, bookingData.durationType]);
+
+  const calculateTotalPrice = () => {
+    let rate = 0;
+    switch(bookingData.durationType) {
+      case "daily":
+        rate = equipmentData.dailyRate;
+        break;
+      case "weekly":
+        rate = equipmentData.weeklyRate;
+        break;
+      case "monthly":
+        rate = equipmentData.monthlyRate;
+        break;
+      default:
+        rate = equipmentData.dailyRate;
+    }
+    return rate * bookingData.duration;
+  };
+
+  const handleDateChange = (e) => {
+    const selectedDate = new Date(e.target.value);
+    const endDate = new Date(selectedDate);
+    endDate.setDate(selectedDate.getDate() + bookingData.duration);
+    
+    setBookingData({
+      ...bookingData,
+      startDate: e.target.value,
+      endDate: endDate.toISOString().substring(0, 10)
+    });
+  };
 
   return (
-    <div className="w-full flex flex-col items-center">
-      <div className="w-[95%] flex flex-col items-center p-6 rounded shadow-2xl gap-3">
-        <h1 className="text-center font-bold text-2xl">Book Package</h1>
-        {/* user info */}
-        <div className="w-full flex flex-wrap justify-center gap-2">
-          <div className="pr-3 md:border-r md:pr-6">
-            <div className="flex flex-col p-2 w-64 xsm:w-72 h-fit gap-2">
-              <div className="flex flex-col">
-                <label htmlFor="username" className="font-semibold">
-                  Username:
-                </label>
-                <input
-                  type="text"
-                  id="username"
-                  className="p-1 rounded border border-black"
-                  value={currentUser.username}
-                  disabled
-                />
+    <div className="w-full flex flex-col items-center bg-gray-50 min-h-screen py-8">
+      <div className="w-[95%] max-w-6xl flex flex-col items-center p-6 rounded-lg shadow-lg gap-6 bg-white border border-green-100">
+        <h1 className="text-center font-bold text-3xl text-green-800 flex items-center gap-2">
+          <FaTractor /> Rent Agricultural Equipment
+        </h1>
+        
+        {/* User and Equipment Info */}
+        <div className="w-full flex flex-col lg:flex-row gap-8">
+          {/* User Info */}
+          <div className="lg:w-1/2 p-6 bg-green-50 rounded-lg border border-green-200">
+            <h2 className="text-xl font-semibold text-green-700 mb-4">Your Information</h2>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-green-700">Full Name</label>
+                <div className="mt-1 p-2 bg-white rounded-md border border-green-300">
+                  {currentUser?.username}
+                </div>
               </div>
-              <div className="flex flex-col">
-                <label htmlFor="email" className="font-semibold">
-                  Email:
-                </label>
-                <input
-                  type="email"
-                  id="email"
-                  className="p-1 rounded border border-black"
-                  value={currentUser.email}
-                  disabled
-                />
+              <div>
+                <label className="block text-sm font-medium text-green-700">Email</label>
+                <div className="mt-1 p-2 bg-white rounded-md border border-green-300">
+                  {currentUser?.email}
+                </div>
               </div>
-              <div className="flex flex-col">
-                <label htmlFor="address" className="font-semibold">
-                  Address:
-                </label>
-                <textarea
-                  maxLength={200}
-                  type="text"
-                  id="address"
-                  className="p-1 rounded border border-black resize-none"
-                  value={currentUser.address}
-                  disabled
-                />
+              <div>
+                <label className="block text-sm font-medium text-green-700">Address</label>
+                <div className="mt-1 p-2 bg-white rounded-md border border-green-300 min-h-[80px]">
+                  {currentUser?.address || "Please update your profile with address"}
+                </div>
               </div>
-              <div className="flex flex-col">
-                <label htmlFor="phone" className="font-semibold">
-                  Phone:
-                </label>
-                <input
-                  type="text"
-                  id="phone"
-                  className="p-1 rounded border border-black"
-                  value={currentUser.phone}
-                  disabled
-                />
+              <div>
+                <label className="block text-sm font-medium text-green-700">Phone</label>
+                <div className="mt-1 p-2 bg-white rounded-md border border-green-300">
+                  {currentUser?.phone || "Not provided"}
+                </div>
               </div>
             </div>
           </div>
-          {/* package info */}
-          <div className="pl-3 md:border-l md:pl-6">
-            <div className="flex flex-col gap-1">
-              <div className="flex flex-wrap gap-2">
+
+          {/* Equipment Info */}
+          <div className="lg:w-1/2 p-6 bg-green-50 rounded-lg border border-green-200">
+            <h2 className="text-xl font-semibold text-green-700 mb-4">Equipment Details</h2>
+            
+            <div className="flex flex-col sm:flex-row gap-4 mb-6">
+              <div className="w-full sm:w-1/3">
                 <img
-                  className="w-28"
-                  src={packageData.packageImages[0]}
-                  alt="Package image"
-                />
-                <div>
-                  <p className="font-semibold text-lg mb-1 capitalize">
-                    {packageData.packageName}
-                  </p>
-                  <p className="flex gap-2 text-green-700 font-semibold capitalize">
-                    <FaMapMarkerAlt /> {packageData.packageDestination}
-                  </p>
-                  {/* days & nights */}
-                  {(+packageData.packageDays > 0 ||
-                    +packageData.packageNights > 0) && (
-                    <p className="flex items-center gap-2">
-                      <FaClock />
-                      {+packageData.packageDays > 0 &&
-                        (+packageData.packageDays > 1
-                          ? packageData.packageDays + " Days"
-                          : packageData.packageDays + " Day")}
-                      {+packageData.packageDays > 0 &&
-                        +packageData.packageNights > 0 &&
-                        " - "}
-                      {+packageData.packageNights > 0 &&
-                        (+packageData.packageNights > 1
-                          ? packageData.packageNights + " Nights"
-                          : packageData.packageNights + " Night")}
-                    </p>
-                  )}
-                </div>
-              </div>
-              <div className="flex flex-col my-1">
-                <label className="font-semibold" htmlFor="date">
-                  Select Date:
-                </label>
-                <input
-                  type="date"
-                  min={currentDate !== "" ? currentDate : ""}
-                  //   min={"2024-01-23"}
-                  id="date"
-                  className="w-max border rounded"
-                  onChange={(e) => {
-                    setBookingData({ ...bookingData, date: e.target.value });
-                  }}
+                  src={equipmentData.images[0]}
+                  alt={equipmentData.name}
+                  className="w-full h-40 object-cover rounded-lg border border-green-200"
                 />
               </div>
-              {/* price */}
-              <p className="flex gap-1 text-xl font-semibold my-1">
-                Price:
-                {packageData.packageOffer ? (
-                  <>
-                    <span className="line-through text-gray-700">
-                      ${packageData.packagePrice}
-                    </span>{" "}
-                    -<span>${packageData.packageDiscountPrice}</span>
-                    <span className="text-lg ml-2 bg-green-700 p-1 rounded text-white">
-                      {Math.floor(
-                        ((+packageData.packagePrice -
-                          +packageData.packageDiscountPrice) /
-                          +packageData.packagePrice) *
-                          100
-                      )}
-                      % Off
-                    </span>
-                  </>
-                ) : (
-                  <span className="text-green-700">
-                    ${packageData.packagePrice}
-                  </span>
-                )}
-              </p>
-              {/* price */}
-              <div className="flex border-2 w-max">
-                <button
-                  className="p-2 py-1 font-semibold"
-                  onClick={() => {
-                    if (bookingData.persons > 1) {
-                      setBookingData({
-                        ...bookingData,
-                        persons: (bookingData.persons -= 1),
-                        totalPrice: packageData.packageDiscountPrice
-                          ? packageData.packageDiscountPrice *
-                            bookingData.persons
-                          : packageData.packagePrice * bookingData.persons,
-                      });
-                    }
-                  }}
-                >
-                  -
-                </button>
-                <input
-                  value={bookingData.persons}
-                  disabled
-                  type="text"
-                  className="border w-10 text-center text-lg"
-                />
-                <button
-                  className="p-2 py-1 font-semibold"
-                  onClick={() => {
-                    if (bookingData.persons < 10) {
-                      setBookingData({
-                        ...bookingData,
-                        persons: (bookingData.persons += 1),
-                        totalPrice: packageData.packageDiscountPrice
-                          ? packageData.packageDiscountPrice *
-                            bookingData.persons
-                          : packageData.packagePrice * bookingData.persons,
-                      });
-                    }
-                  }}
-                >
-                  +
-                </button>
-              </div>
-              <p className="text-xl font-semibold">
-                Total Price:
-                <span className="text-green-700">
-                  $
-                  {packageData.packageDiscountPrice
-                    ? packageData.packageDiscountPrice * bookingData.persons
-                    : packageData.packagePrice * bookingData.persons}
-                </span>
-              </p>
-              <div className="my-2 max-w-[300px] gap-1">
-                <p
-                  className={`font-semibold ${
-                    instance && "text-red-700 text-sm"
-                  }`}
-                >
-                  Payment:
-                  {!instance
-                    ? "Loading..."
-                    : "Don't use your original card details!(This is not the production build)"}
+              <div className="w-full sm:w-2/3">
+                <h3 className="text-xl font-bold text-green-800">{equipmentData.name}</h3>
+                <p className="flex items-center text-green-600 mt-1">
+                  <FaMapMarkerAlt className="mr-2" /> {equipmentData.location}
                 </p>
-                {clientToken && (
-                  <>
-                    <DropIn
-                      options={{
-                        authorization: clientToken,
-                        paypal: {
-                          flow: "vault",
-                        },
-                      }}
-                      onInstance={(instance) => setInstance(instance)}
-                    />
-                    <button
-                      className="p-2 rounded bg-blue-600 text-white payment-btn disabled:optional:80 hover:opacity-95 cursor-pointer"
-                      onClick={handleBookPackage}
-                      disabled={loading || !instance || !currentUser?.address}
-                    >
-                      {loading ? "Processing..." : "Book Now"}
-                    </button>
-                  </>
-                )}
+                <div className="flex items-center mt-2">
+                  <Rating
+                    value={equipmentData.rating}
+                    precision={0.1}
+                    readOnly
+                    size="small"
+                  />
+                  <span className="ml-2 text-sm text-gray-600">
+                    ({equipmentData.totalRatings} reviews)
+                  </span>
+                </div>
+                <p className="mt-2 text-gray-700 text-sm">
+                  {equipmentData.description}
+                </p>
               </div>
             </div>
+
+            {/* Rental Details */}
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-green-700">Rental Period</label>
+                  <select
+                    className="mt-1 block w-full p-2 border border-green-300 rounded-md shadow-sm"
+                    value={bookingData.durationType}
+                    onChange={(e) => setBookingData({
+                      ...bookingData,
+                      durationType: e.target.value,
+                      totalPrice: calculateTotalPrice()
+                    })}
+                  >
+                    <option value="daily">Daily</option>
+                    <option value="weekly">Weekly</option>
+                    <option value="monthly">Monthly</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-green-700">
+                    {bookingData.durationType === "daily" ? "Days" : 
+                     bookingData.durationType === "weekly" ? "Weeks" : "Months"}
+                  </label>
+                  <div className="flex items-center mt-1">
+                    <button
+                      className="p-2 bg-green-600 text-white rounded-l-md"
+                      onClick={() => {
+                        if (bookingData.duration > 1) {
+                          setBookingData({
+                            ...bookingData,
+                            duration: bookingData.duration - 1,
+                            totalPrice: calculateTotalPrice()
+                          });
+                        }
+                      }}
+                    >
+                      -
+                    </button>
+                    <div className="p-2 w-12 text-center border-t border-b border-green-300">
+                      {bookingData.duration}
+                    </div>
+                    <button
+                      className="p-2 bg-green-600 text-white rounded-r-md"
+                      onClick={() => {
+                        if (bookingData.duration < 30) {
+                          setBookingData({
+                            ...bookingData,
+                            duration: bookingData.duration + 1,
+                            totalPrice: calculateTotalPrice()
+                          });
+                        }
+                      }}
+                    >
+                      +
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-green-700">Start Date</label>
+                  <input
+                    type="date"
+                    min={currentDate}
+                    className="mt-1 block w-full p-2 border border-green-300 rounded-md shadow-sm"
+                    onChange={handleDateChange}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-green-700">End Date</label>
+                  <input
+                    type="date"
+                    value={bookingData.endDate || ""}
+                    min={bookingData.startDate || currentDate}
+                    className="mt-1 block w-full p-2 border border-green-300 rounded-md shadow-sm"
+                    disabled
+                  />
+                </div>
+              </div>
+
+              <div className="pt-4 border-t border-green-200">
+                <div className="flex justify-between items-center mb-2">
+                  <span className="font-medium text-green-700">Rate:</span>
+                  <span className="font-bold">
+                    ₹{bookingData.durationType === "daily" ? equipmentData.dailyRate : 
+                      bookingData.durationType === "weekly" ? equipmentData.weeklyRate : equipmentData.monthlyRate}
+                    /{bookingData.durationType === "daily" ? "day" : 
+                      bookingData.durationType === "weekly" ? "week" : "month"}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center text-lg font-bold text-green-800">
+                  <span>Total Price:</span>
+                  <span>₹{bookingData.totalPrice}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Payment Section */}
+        <div className="w-full p-6 bg-green-50 rounded-lg border border-green-200">
+          <h2 className="text-xl font-semibold text-green-700 mb-4">Payment Details</h2>
+          <div className="max-w-md mx-auto">
+            <p className={`text-sm mb-4 ${instance ? "text-red-600" : "text-gray-600"}`}>
+              {!instance
+                ? "Loading payment gateway..."
+                : "For demo purposes, use test card: 4111 1111 1111 1111, Exp: 12/25, CVV: 123"}
+            </p>
+            
+            {clientToken && (
+              <>
+                <DropIn
+                  options={{
+                    authorization: clientToken,
+                    paypal: {
+                      flow: "vault",
+                    },
+                  }}
+                  onInstance={(instance) => setInstance(instance)}
+                />
+                <button
+                  className="w-full mt-6 p-3 bg-green-600 hover:bg-green-700 text-white font-bold rounded-lg shadow-md transition-colors duration-300 disabled:opacity-70"
+                  onClick={handleRentEquipment}
+                  disabled={loading || !instance || !currentUser?.address}
+                >
+                  {loading ? (
+                    <span className="flex items-center justify-center">
+                      <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      Processing...
+                    </span>
+                  ) : (
+                    "Confirm Rental"
+                  )}
+                </button>
+              </>
+            )}
           </div>
         </div>
       </div>
@@ -372,4 +389,4 @@ const Booking = () => {
   );
 };
 
-export default Booking;
+export default EquipmentBooking;

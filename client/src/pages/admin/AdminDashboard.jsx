@@ -1,6 +1,6 @@
-import React, { useEffect, useRef, useState } from "react";
+import  { useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import {
   updateUserStart,
   updateUserSuccess,
@@ -18,11 +18,17 @@ import {
   ref,
   uploadBytesResumable,
 } from "firebase/storage";
+import { 
+  UserCircle2, 
+  LogOut, 
+  Edit, 
+  Trash2, 
+  Camera 
+} from 'lucide-react';
 import { app } from "../../firebase";
 import AllBookings from "./AllBookings";
 import AdminUpdateProfile from "./AdminUpdateProfile";
 import AddPackages from "./AddPackages";
-import "./styles/DashboardStyle.css";
 import AllPackages from "./AllPackages";
 import AllUsers from "./AllUsers";
 import Payments from "./Payments";
@@ -62,7 +68,7 @@ const AdminDashboard = () => {
       dispatch(updateUserStart());
       const storage = getStorage(app);
       const photoname = new Date().getTime() + photo.name.replace(/\s/g, "");
-      const storageRef = ref(storage, `profile-photos/${photoname}`); //profile-photos - folder name in firebase
+      const storageRef = ref(storage, `profile-photos/${photoname}`);
       const uploadTask = uploadBytesResumable(storageRef, photo);
 
       uploadTask.on(
@@ -71,7 +77,6 @@ const AdminDashboard = () => {
           const progress = Math.floor(
             (snapshot.bytesTransferred / snapshot.totalBytes) * 100
           );
-          //   console.log(progress);
           setPhotoPercentage(progress);
         },
         (error) => {
@@ -150,228 +155,163 @@ const AdminDashboard = () => {
   };
 
   return (
-    <div className="flex w-full flex-wrap max-sm:flex-col p-2">
-      {currentUser ? (
-        <>
-          <div className="w-[35%] p-3 max-sm:w-full">
-            <div className="flex flex-col items-center gap-4 p-3">
-              <div className="w-full flex flex-col items-center relative">
+    
+    <div className="flex w-full min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-6">
+    {currentUser ? (
+      <div className="w-full grid grid-cols-1 md:grid-cols-3 gap-6">
+        {/* Enhanced Profile Section */}
+        <div className="md:col-span-1 bg-white shadow-2xl rounded-3xl p-6 transform transition-all duration-300 hover:scale-[1.02]">
+          <div className="relative flex flex-col items-center">
+            {/* Profile Photo Container */}
+            <div className="relative group mb-6">
+              <div className="w-64 h-64 rounded-full overflow-hidden shadow-2xl border-4 border-blue-100">
                 <img
                   src={
                     (profilePhoto && URL.createObjectURL(profilePhoto)) ||
-                    formData.avatar
+                    formData.avatar ||
+                    "/default-avatar.png"
                   }
-                  alt="Profile photo"
-                  className="w-64 min-h-52 max-h-64 rounded-lg"
+                  alt="Profile"
+                  className="w-full h-full object-cover group-hover:opacity-70 transition-opacity duration-300"
+                />
+                <div 
                   onClick={() => fileRef.current.click()}
-                  onMouseOver={() => {
-                    document
-                      .getElementById("photoLabel")
-                      .classList.add("block");
-                  }}
-                  onMouseOut={() => {
-                    document
-                      .getElementById("photoLabel")
-                      .classList.remove("block");
-                  }}
-                />
-                <input
-                  type="file"
-                  name="photo"
-                  id="photo"
-                  hidden
-                  ref={fileRef}
-                  accept="image/*"
-                  onChange={(e) => setProfilePhoto(e.target.files[0])}
-                />
-                <label
-                  htmlFor="photo"
-                  id="photoLabel"
-                  className="w-64 bg-slate-300 absolute bottom-0 p-2 text-center text-lg text-white font-semibold rounded-b-lg"
-                  hidden
+                  className="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 cursor-pointer"
                 >
-                  Choose Photo
-                </label>
-              </div>
-              {profilePhoto && (
-                <div className="flex w-full justify-between gap-1">
-                  <button
-                    onClick={() => handleProfilePhoto(profilePhoto)}
-                    className="bg-green-700 p-2 text-white mt-3 flex-1 hover:opacity-90"
-                  >
-                    {loading ? `Uploading...(${photoPercentage}%)` : "Upload"}
-                  </button>
+                  <Camera className="text-white w-12 h-12" />
                 </div>
-              )}
-              <p
-                style={{
-                  width: "100%",
-                  borderBottom: "1px solid black",
-                  lineHeight: "0.1em",
-                  margin: "10px",
-                }}
-              >
-                <span className="font-semibold" style={{ background: "#fff" }}>
-                  Details
-                </span>
-              </p>
-              <div className="w-full flex justify-between px-1">
+              </div>
+              <input
+                type="file"
+                ref={fileRef}
+                hidden
+                accept="image/*"
+                onChange={(e) => setProfilePhoto(e.target.files[0])}
+              />
+            </div>
+
+            {/* Photo Upload Button */}
+            {profilePhoto && (
+              <div className="w-full mb-4">
                 <button
-                  onClick={handleLogout}
-                  className="text-red-600 text-lg font-semibold self-start border border-red-600 p-1 rounded-lg hover:bg-red-600 hover:text-white"
+                  onClick={() => handleProfilePhoto(profilePhoto)}
+                  className="w-full bg-gradient-to-r from-blue-500 to-blue-700 text-white py-3 rounded-lg hover:from-blue-600 hover:to-blue-800 transition-all flex items-center justify-center"
                 >
-                  Log-out
+                  {loading ? `Uploading (${photoPercentage}%)` : "Upload Photo"}
                 </button>
+              </div>
+            )}
+
+            {/* User Details */}
+            <div className="text-center w-full">
+              <h2 className="text-3xl font-bold text-gray-800 mb-2">
+                {currentUser.username}
+              </h2>
+              <p className="text-blue-600 text-lg mb-4">{currentUser.email}</p>
+
+              {/* User Stats */}
+              <div className="grid grid-cols-3 gap-4 bg-gray-100 rounded-xl p-4 mb-6">
+                <div>
+                  <p className="text-sm text-gray-500">Phone</p>
+                  <p className="font-semibold">{currentUser.phone}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500">Role</p>
+                  <p className="font-semibold">Admin</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500">Joined</p>
+                  <p className="font-semibold">
+                    {new Date(currentUser.createdAt).toLocaleDateString()}
+                  </p>
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="space-y-4">
                 <button
                   onClick={() => setActivePanelId(8)}
-                  className="text-white text-lg self-end bg-gray-500 p-1 rounded-lg hover:bg-gray-700"
+                  className="w-full bg-gradient-to-r from-green-400 to-green-600 text-white py-3 rounded-lg hover:from-green-500 hover:to-green-700 transition-all flex items-center justify-center"
                 >
-                  Edit Profile
+                  <Edit className="mr-2" /> Edit Profile
+                </button>
+                
+                <button
+                  onClick={handleLogout}
+                  className="w-full bg-gradient-to-r from-red-400 to-red-600 text-white py-3 rounded-lg hover:from-red-500 hover:to-red-700 transition-all flex items-center justify-center"
+                >
+                  <LogOut className="mr-2" /> Log Out
+                </button>
+                
+                <button
+                  onClick={handleDeleteAccount}
+                  className="w-full text-red-600 hover:text-red-800 transition-colors flex items-center justify-center"
+                >
+                  <Trash2 className="mr-2" /> Delete Account
                 </button>
               </div>
-              <div className="w-full shadow-2xl rounded-lg p-3 break-all">
-                <p className="text-3xl font-semibold m-1">
-                  Hi {currentUser.username} !
-                </p>
-                <p className="text-lg font-semibold">
-                  Email:{currentUser.email}
-                </p>
-                <p className="text-lg font-semibold">
-                  Phone:{currentUser.phone}
-                </p>
-                <p className="text-lg font-semibold">
-                  Address:{currentUser.address}
-                </p>
-              </div>
-              <button
-                onClick={handleDeleteAccount}
-                className="text-red-600 hover:underline"
-              >
-                Delete account
-              </button>
             </div>
           </div>
-          {/* ---------------------------------------------------------------------------------------- */}
-          <div className="w-[65%] max-sm:w-full">
-            <div className="main-div">
-              <nav className="w-full border-blue-500 border-b-4 overflow-x-auto navbar">
-                <div className="w-full flex gap-2">
+        </div>
+
+       
+            
+
+          {/* Main Content Section */}
+          <div className="md:col-span-2 bg-white rounded-2xl">
+            {/* Navigation Tabs */}
+            <div className="border-b px-4 py-3 overflow-x-auto">
+              <div className="flex space-x-2">
+                {[
+                  { id: 1, name: "Bookings" },
+                  { id: 2, name: "Add Packages" },
+                  { id: 3, name: "All Packages" },
+                  { id: 4, name: "Users" },
+                  { id: 5, name: "Payments" },
+                  { id: 6, name: "Ratings/Reviews" },
+                  { id: 7, name: "History" }
+                ].map((tab) => (
                   <button
-                    className={
-                      activePanelId === 1
-                        ? "p-1 rounded-t transition-all duration-300 text-nowrap bg-blue-500 text-white"
-                        : "p-1 rounded-t transition-all duration-300 text-nowrap"
-                    }
-                    id="bookings"
-                    onClick={() => setActivePanelId(1)}
+                    key={tab.id}
+                    className={`px-4 py-2 rounded-lg transition-all duration-300 ${
+                      activePanelId === tab.id
+                        ? "bg-blue-600 text-white"
+                        : "text-gray-600 hover:bg-gray-100"
+                    }`}
+                    onClick={() => setActivePanelId(tab.id)}
                   >
-                    Bookings
+                    {tab.name}
                   </button>
-                  <button
-                    className={
-                      activePanelId === 2
-                        ? "p-1 rounded-t transition-all duration-300 text-nowrap bg-blue-500 text-white"
-                        : "p-1 rounded-t transition-all duration-300 text-nowrap"
-                    }
-                    id="bookings"
-                    onClick={() => setActivePanelId(2)}
-                  >
-                    Add Packages
-                  </button>
-                  <button
-                    className={
-                      activePanelId === 3
-                        ? "p-1 rounded-t transition-all duration-300 text-nowrap bg-blue-500 text-white"
-                        : "p-1 rounded-t transition-all duration-300 text-nowrap"
-                    }
-                    id="bookings"
-                    onClick={() => setActivePanelId(3)}
-                  >
-                    All Packages
-                  </button>
-                  <button
-                    className={
-                      activePanelId === 4
-                        ? "p-1 rounded-t transition-all duration-300 text-nowrap bg-blue-500 text-white"
-                        : "p-1 rounded-t transition-all duration-300 text-nowrap"
-                    }
-                    id="bookings"
-                    onClick={() => setActivePanelId(4)}
-                  >
-                    Users
-                  </button>
-                  <button
-                    className={
-                      activePanelId === 5
-                        ? "p-1 rounded-t transition-all duration-300 text-nowrap bg-blue-500 text-white"
-                        : "p-1 rounded-t transition-all duration-300 text-nowrap"
-                    }
-                    id="bookings"
-                    onClick={() => setActivePanelId(5)}
-                  >
-                    Payments
-                  </button>
-                  <button
-                    className={
-                      activePanelId === 6
-                        ? "p-1 rounded-t transition-all duration-300 text-nowrap bg-blue-500 text-white"
-                        : "p-1 rounded-t transition-all duration-300 text-nowrap"
-                    }
-                    id="bookings"
-                    onClick={() => setActivePanelId(6)}
-                  >
-                    Ratings/Reviews
-                  </button>
-                  <button
-                    className={
-                      activePanelId === 7
-                        ? "p-1 rounded-t transition-all duration-300 text-nowrap bg-blue-500 text-white"
-                        : "p-1 rounded-t transition-all duration-300 text-nowrap"
-                    }
-                    id="bookings"
-                    onClick={() => setActivePanelId(7)}
-                  >
-                    History
-                  </button>
-                  {/* <button
-                    className={
-                      activePanelId === 7
-                        ? "p-1 rounded-t transition-all duration-300 text-nowrap bg-blue-500 text-white"
-                        : "p-1 rounded-t transition-all duration-300 text-nowrap"
-                    }
-                    id="updateProfile"
-                    onClick={() => setActivePanelId(7)}
-                  >
-                    Update Profile
-                  </button> */}
-                </div>
-              </nav>
-              <div className="content-div flex flex-wrap">
-                {activePanelId === 1 ? (
-                  <AllBookings />
-                ) : activePanelId === 2 ? (
-                  <AddPackages />
-                ) : activePanelId === 3 ? (
-                  <AllPackages />
-                ) : activePanelId === 4 ? (
-                  <AllUsers />
-                ) : activePanelId === 5 ? (
-                  <Payments />
-                ) : activePanelId === 6 ? (
-                  <RatingsReviews />
-                ) : activePanelId === 7 ? (
-                  <History />
-                ) : activePanelId === 8 ? (
-                  <AdminUpdateProfile />
-                ) : (
-                  <div>Page Not Found!</div>
-                )}
+                ))}
               </div>
             </div>
+
+            {/* Content Panel */}
+            <div className="p-4">
+              {activePanelId === 1 ? (
+                <AllBookings />
+              ) : activePanelId === 2 ? (
+                <AddPackages />
+              ) : activePanelId === 3 ? (
+                <AllPackages />
+              ) : activePanelId === 4 ? (
+                <AllUsers />
+              ) : activePanelId === 5 ? (
+                <Payments />
+              ) : activePanelId === 6 ? (
+                <RatingsReviews />
+              ) : activePanelId === 7 ? (
+                <History />
+              ) : activePanelId === 8 ? (
+                <AdminUpdateProfile />
+              ) : (
+                <div>Page Not Found!</div>
+              )}
+            </div>
           </div>
-        </>
+        </div>
       ) : (
-        <div>
+        <div className="w-full flex justify-center items-center">
           <p className="text-red-700">Login First</p>
         </div>
       )}
